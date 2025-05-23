@@ -12,12 +12,12 @@ MTLA is a novel attention mechanism that combines low-rank and innovative tempor
 ## Key Features
 
 ### Supported Attention Mechanisms
-- **Attention**: Multi-head Attention (MHA), Multi-Query Attention (MQA), Grouped-Query Attention (GQA), Multi-head Latent Attention (MLA), and Multi-head Temporal Latent Attention (MTLA)
-- **Positional Encoding**: Rotary Position Embedding (RoPE), and Decoupled Rotary Position Embedding
+- **Attention**: Multi-head Attention ([MHA](https://arxiv.org/pdf/1706.03762)), Multi-Query Attention ([MQA](https://arxiv.org/pdf/1911.02150)), Grouped-Query Attention ([GQA](https://arxiv.org/pdf/2305.13245)), Multi-head Latent Attention ([MLA](https://arxiv.org/pdf/2405.04434)), and Multi-head Temporal Latent Attention ([MTLA](https://arxiv.org/pdf/2505.13544))
+- **Positional Encoding**: Rotary Position Embedding ([RoPE](https://arxiv.org/pdf/2104.09864)), and [Decoupled Rotary Position Embedding](https://arxiv.org/pdf/2405.04434)
 
 ### Complete Setup Recipes
 - Tasks: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
-- Data Processing: Fairseq-style Fbank feature extraction and compression into zip file, and ESPnet2-style speech data processing with raw audio saved in FLAC or ARK format
+- Data Processing: [Fairseq](https://github.com/facebookresearch/fairseq)-style Fbank feature extraction and compression into zip file, and [ESPnet2](https://github.com/espnet/espnet)-style speech data processing with raw audio saved in FLAC or ARK format
 - Feature Extraction: Fbank online/offline extraction, and self-supervised learning representations as features, using upstream models in [S3PRL](https://github.com/s3prl/s3prl)
 
 ### Evaluation
@@ -53,7 +53,7 @@ MTLA is a novel attention mechanism that combines low-rank and innovative tempor
 
 If you use this codebase, or otherwise find our work valuable, please cite MTLA:
 ```
-@article{mlta,
+@article{mtla,
   title={Multi-head Temporal Latent Attention},
   author={Deng, Keqi and Woodland, Philip C},
   journal={arXiv preprint arXiv:2505.13544},
