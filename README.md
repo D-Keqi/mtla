@@ -1,1 +1,62 @@
 # MTLA: Multi-head Temporal Latent Attention
+
+![MTLA](assets/mtla.png "Multi-head Temporal Latent Attention")
+> **Multi-head Temporal Latent Attention**\
+> Keqi Deng, Philip C. Woodland\
+> Paper: https://arxiv.org/abs/2505.13544
+
+## About
+
+MTLA is a novel attention mechanism that combines low-rank and innovative temporal compression, offering a state-of-the-art solution for key-value cache compression with significantly reduced memory footprint during self-attention inference. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, and spoken language understanding, with fully featured setup recipes.
+
+## Key Features
+
+### Supported Attention Mechanisms
+- **Attention**: Multi-head Attention (MHA), Multi-Query Attention (MQA), Grouped-Query Attention (GQA), Multi-head Latent Attention (MLA), and Multi-head Temporal Latent Attention (MTLA)
+- **Positional Encoding**: Rotary Position Embedding (RoPE), and Decoupled Rotary Position Embedding
+
+### Complete Setup Recipes
+- Tasks: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
+- Data Processing: Fairseq-style Fbank feature extraction and compression into zip file, and ESPnet2-style speech data processing with raw audio saved in FLAC or ARK format
+- Feature Extraction: Fbank online/offline extraction, and self-supervised learning representations as features, using upstream models in [S3PRL](https://github.com/s3prl/s3prl)
+
+### Evaluation
+- **Parallel Inference**: Fairseq-style parallel beam search over batches containing multiple data samples
+- **Quality Evaluation**: BLEU, WER, classification accuracy, and ROUGE (ROUGE-1, ROUGE-2, and ROUGE-L)
+- **Efficiency Evaluation**: inference time spent, and GPU memory (including activation memory and the storage of key-value cache) consumed on inference
+
+## Installation and Usage
+- If you only need the Python MTLA module, simply clone this repository and refer to the following example:
+  ``` python
+  import torch
+  from MTLA import MultiheadTemporalLatentAttention
+  
+  batch, length, dim = 2, 64, 512
+  x = torch.randn(batch, length, dim)
+  pos = torch.arange(0, length).float().view(1, -1) # Position information
+  model = MultiheadTemporalLatentAttention(
+      embed_dim=dim, # Model dimension
+      num_heads=8,  # Attention heads of queries
+  )
+  y = model(query=x, key=x, value=x, position=pos)
+  assert y.shape == x.shape
+  ```
+- If you intend to run the full experiments, please install the project as described below before proceeding to the examples in the `experiments` directory.
+  * [PyTorch](http://pytorch.org/) version >= 1.10.0
+  * Python version >= 3.8
+  ``` bash
+  cd experiments/fairseq
+  pip install --editable ./
+  ```
+
+## Citation
+
+If you use this codebase, or otherwise find our work valuable, please cite MTLA:
+```
+@article{mlta,
+  title={Multi-head Temporal Latent Attention},
+  author={Deng, Keqi and Woodland, Philip C},
+  journal={arXiv preprint arXiv:2505.13544},
+  year={2025}
+}
+```
