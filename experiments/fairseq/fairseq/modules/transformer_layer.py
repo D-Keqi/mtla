@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -10,7 +11,6 @@ import torch.nn as nn
 from torch import Tensor
 
 from fairseq import utils
-from fairseq.models.transformer import TransformerConfig
 from fairseq.modules import LayerNorm, MultiheadAttention
 from fairseq.modules.fairseq_dropout import FairseqDropout
 from fairseq.modules.quant_noise import quant_noise
@@ -229,10 +229,14 @@ class TransformerEncoderLayerBase(nn.Module):
 # backward compatible with the legacy argparse format
 class TransformerEncoderLayer(TransformerEncoderLayerBase):
     def __init__(self, args):
+        from fairseq.models.transformer import TransformerConfig
+
         super().__init__(TransformerConfig.from_namespace(args))
         self.args = args
 
     def build_self_attention(self, embed_dim, args):
+        from fairseq.models.transformer import TransformerConfig
+
         return super().build_self_attention(
             embed_dim, TransformerConfig.from_namespace(args)
         )
@@ -537,6 +541,8 @@ class TransformerDecoderLayer(TransformerDecoderLayerBase):
     def __init__(
         self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False
     ):
+        from fairseq.models.transformer import TransformerConfig
+
         super().__init__(
             TransformerConfig.from_namespace(args),
             no_encoder_attn=no_encoder_attn,
@@ -548,6 +554,8 @@ class TransformerDecoderLayer(TransformerDecoderLayerBase):
     def build_self_attention(
         self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
     ):
+        from fairseq.models.transformer import TransformerConfig
+
         return super().build_self_attention(
             embed_dim,
             TransformerConfig.from_namespace(args),
@@ -556,6 +564,8 @@ class TransformerDecoderLayer(TransformerDecoderLayerBase):
         )
 
     def build_encoder_attention(self, embed_dim, args):
+        from fairseq.models.transformer import TransformerConfig
+
         return super().build_encoder_attention(
             embed_dim,
             TransformerConfig.from_namespace(args),

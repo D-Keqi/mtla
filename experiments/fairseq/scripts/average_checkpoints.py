@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -8,7 +9,7 @@ import argparse
 import collections
 import os
 import re
-
+import glob
 import torch
 
 from fairseq.file_io import PathManager
@@ -155,13 +156,14 @@ def main():
         print("averaging checkpoints: ", args.inputs)
 
     if args.num_best_checkpoints > 0:
-        args.inputs = list(
-            sorted(
-                args.inputs,
-                key=lambda x: float(
-                    os.path.basename(x).split("_")[-1].replace(".pt", "")
-                ),
-            )
+        print(args.inputs)
+        args.inputs = sorted(
+            glob.glob(
+                os.path.join(args.inputs[0], "checkpoint.best_*.pt")
+            ),  # Match all files that meet the format
+            key=lambda x: float(
+                os.path.basename(x).split("_")[-1].replace(".pt", "")
+            ),  # Sort by numerical value
         )
         args.inputs = args.inputs[: args.num_best_checkpoints]
         for path in args.inputs:

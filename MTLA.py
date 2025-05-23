@@ -2,7 +2,7 @@
 """
 Created on Mon May 19 00:50:20 2025
 
-@author: Keqi Deng (Cambridge University)
+@author: Keqi Deng (University of Cambridge)
 """
 
 import math
@@ -380,7 +380,7 @@ class MultiheadTemporalLatentAttention(nn.Module):
 class HyperNetwork(nn.Module):
     def __init__(self, d, down_rate, low_rank=4):
         """
-        d: 特征维度
+        d: Model dimension
         """
         super().__init__()
         self.d = d

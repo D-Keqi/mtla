@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -814,10 +815,10 @@ class EnsembleModel(nn.Module):
         encoder_outputs = []
         for model in self.models:
             if hasattr(model, "frontend") and model.frontend is not None:
-                # 如果模型有 frontend，则使用 forward_encoder_torchscript
+                # If the model has a frontend, use forward_encoder_torchscript
                 encoder_output = model.forward_encoder_torchscript(net_input)
             else:
-                # 否则使用默认的 encoder.forward_torchscript
+                # Otherwise, use the default encoder.forward_torchscript
                 encoder_output = model.encoder.forward_torchscript(net_input)
             encoder_outputs.append(encoder_output)
 

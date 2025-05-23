@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -957,7 +958,7 @@ class MultiheadLatentAttention(MultiheadAttention):
 class HyperNetwork(nn.Module):
     def __init__(self, d, down_rate, low_rank=4):
         """
-        d: 特征维度
+        d: Model dimension
         """
         super().__init__()
         self.d = d
@@ -1867,7 +1868,6 @@ class MLADecoderOnly(MTLADecoderOnly):
         )
 
     def build_decoder_layer(self, cfg, no_encoder_attn=False):
-        # 使用修改后的 RotaryTransformerDecoderLayer 替换原有的 TransformerDecoderLayerBase
         layer = MLADecoderOnlyLayer(cfg, no_encoder_attn)
         checkpoint = cfg.checkpoint_activations
         if checkpoint:

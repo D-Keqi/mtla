@@ -1,5 +1,6 @@
 #!/usr/bin/env python3 -u
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -417,7 +418,7 @@ def _main(cfg: DictConfig, output_file):
 
 
 memory_samples = []
-sampling_interval = 0.1
+sampling_interval = 0.1  # 采样间隔（秒）
 
 
 def monitor_memory():
