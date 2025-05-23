@@ -7,7 +7,7 @@
 
 ## About
 
-MTLA is a novel attention mechanism that combines low-rank and innovative temporal compression, offering a state-of-the-art solution for key-value cache compression with significantly reduced memory footprint during self-attention inference. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, and spoken language understanding, with fully featured setup recipes.
+MTLA is a novel attention mechanism that combines low-rank and innovative temporal compression, offering a state-of-the-art solution for key-value cache compression with significantly reduced memory footprint during self-attention inference. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, spoken language understanding, and so on, with fully featured setup recipes.
 
 ## Key Features
 
