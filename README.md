@@ -7,7 +7,7 @@
 
 ## About
 
-MTLA is a novel attention mechanism that combines low-rank and innovative temporal compression, offering a state-of-the-art solution for key-value cache compression with significantly reduced memory footprint during self-attention inference. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, spoken language understanding, and so on, with fully featured setup recipes.
+MTLA is a novel attention mechanism that combines low-rank and innovative temporal compression to the key-value cache, offering a state-of-the-art self-attention solution with significantly reduced memory footprint during inference. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, spoken language understanding, and so on, with fully featured setup recipes.
 
 ## Key Features
 
@@ -17,7 +17,7 @@ MTLA is a novel attention mechanism that combines low-rank and innovative tempor
 
 ### Complete Setup Recipes
 - Tasks: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
-- Data Processing: [Fairseq](https://github.com/facebookresearch/fairseq)-style Fbank feature extraction and compression into zip file, and [ESPnet2](https://github.com/espnet/espnet)-style speech data processing with raw audio saved in FLAC or ARK format
+- Data Processing: [Fairseq](https://github.com/facebookresearch/fairseq)-style Fbank feature extraction and compression into `zip` file, and [ESPnet2](https://github.com/espnet/espnet)-style speech data processing with raw audio saved in `flac` or `ark` format
 - Feature Extraction: Fbank online/offline extraction, and self-supervised learning representations as features, using upstream models in [S3PRL](https://github.com/s3prl/s3prl)
 
 ### Evaluation
