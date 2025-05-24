@@ -1,0 +1,1 @@
+/home/mifs/kd502/espnet_new/espnet/egs2/librispeech/asr1/utils/parse_options.sh
