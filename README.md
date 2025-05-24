@@ -45,7 +45,7 @@
   * [PyTorch](http://pytorch.org/) version >= 1.10.0
   * Python version >= 3.8
   ``` bash
-  cd experiments/fairseq
+  cd experiments/tools/fairseq
   pip install --editable ./
   ```
 
