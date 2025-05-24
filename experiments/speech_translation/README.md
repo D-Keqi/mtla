@@ -25,6 +25,7 @@ To train a new ASR model from scratch, run:
 # and configuration for each language, while also training ASR
 bash prepare.sh --skip_asr false --MUSTC_ROOT ${MUSTC_ROOT} --ASR_SAVE_DIR /path/to/save_ASR_model
 ```
+## Model Training
 Third, train the ST model. By default, MTLA is used as the decoder-only self-attention structure, i.e. `--arch s2t_decoder_only_MTLA_cross_xm`.
 To train other models:
 - MHA: `--arch s2t_decoder_only_roformer_cross_xm`
@@ -41,6 +42,7 @@ python ./../tools/fairseq/scripts/average_checkpoints.py \
   --inputs ${ST_SAVE_DIR} --num-best-checkpoints 10 \
   --output "${ST_SAVE_DIR}/${CHECKPOINT_FILENAME}"
 ```
+## Model Inference
 Finally, run inference. The translation quality (BLEU score), inference time, and GPU memory usage will all be reported.
 ```bash
 bash infer.sh --MUSTC_ROOT ${MUSTC_ROOT} --ST_SAVE_DIR /path/to/save_ST_model
