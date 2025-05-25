@@ -1,10 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
 import ctypes
+import evaluate
 import math
+import re
+import string
 import sys
 from dataclasses import dataclass, field
 
@@ -164,5 +168,113 @@ class Scorer(object):
             self.brevity(),
             self.stat.predlen / self.stat.reflen,
             self.stat.predlen,
-            self.stat.reflen
+            self.stat.reflen,
+        )
+
+
+@dataclass
+class RougeLConfig(FairseqDataclass):
+    rouge_lowercase: bool = field(
+        default=True, metadata={"help": "apply lowercasing before evaluation"}
+    )
+    rouge_stemming: bool = field(
+        default=True, metadata={"help": "apply Porter stemmer before evaluation"}
+    )
+    rouge_corpus_level: bool = field(
+        default=True,
+        metadata={
+            "help": "compute corpus-level ROUGE-L score instead of sentence-level"
+        },
+    )
+    rouge_detokenize: bool = field(
+        default=True, metadata={"help": "apply detokenization before evaluation"}
+    )
+
+
+@register_scorer("rouge_l", dataclass=RougeLConfig)
+class RougeLScorer(BaseScorer):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.cfg = cfg
+        self.stemmer = self._build_stemmer() if cfg.rouge_stemming else None
+        self.detok = self._build_detokenizer() if cfg.rouge_detokenize else None
+        self.rouge = evaluate.load("rouge")
+        self.refs = []
+        self.preds = []
+
+    def _build_stemmer(self):
+        try:
+            from nltk.stem import PorterStemmer
+
+            return PorterStemmer()
+        except ImportError:
+            raise ImportError("Please install NLTK: `pip install nltk`")
+
+    def _build_detokenizer(self):
+        try:
+            from sacremoses import MosesDetokenizer
+
+            return MosesDetokenizer()
+        except ImportError:
+            raise ImportError("Please install sacremoses: `pip install sacremoses`")
+
+    def _detokenize(self, text):
+        if self.detok:
+            words = text.strip().split()
+            return self.detok.detokenize(words)
+        return text
+
+    def _preprocess(self, text):
+        text = self._detokenize(text)
+        if self.cfg.rouge_lowercase:
+            text = text.lower()
+
+        # Remove punctuation
+        text = re.sub(rf"[{re.escape(string.punctuation)}]", "", text)
+
+        if self.cfg.rouge_stemming and self.stemmer:
+            words = text.strip().split()
+            text = " ".join([self.stemmer.stem(word) for word in words])
+        return text
+
+    def add_string(self, ref, pred):
+        self.refs.append(self._preprocess(ref))
+        self.preds.append(self._preprocess(pred))
+
+    def _score_corpus_level(self):
+        results = self.rouge.compute(predictions=self.preds, references=self.refs)
+        return {
+            "rouge1": results["rouge1"] * 100,
+            "rouge2": results["rouge2"] * 100,
+            "rougeL": results["rougeL"] * 100,
+        }
+
+    def _score_sentence_level(self):
+        rouge1_scores = []
+        rouge2_scores = []
+        rougeL_scores = []
+        for ref, pred in zip(self.refs, self.preds):
+            result = self.rouge.compute(predictions=[pred], references=[ref])
+            rouge1_scores.append(result["rouge1"])
+            rouge2_scores.append(result["rouge2"])
+            rougeL_scores.append(result["rougeL"])
+        return {
+            "rouge1": sum(rouge1_scores) / len(rouge1_scores) * 100,
+            "rouge2": sum(rouge2_scores) / len(rouge2_scores) * 100,
+            "rougeL": sum(rougeL_scores) / len(rougeL_scores) * 100,
+        }
+
+    def score(self):
+        if self.cfg.rouge_corpus_level:
+            return self._score_corpus_level()
+        else:
+            return self._score_sentence_level()
+
+    def result_string(self):
+        scores = self.score()
+        level = "corpus-level" if self.cfg.rouge_corpus_level else "sentence-level"
+        return (
+            f"ROUGE-1 ({level}): {scores['rouge1']:.2f}\n"
+            f"ROUGE-2 ({level}): {scores['rouge2']:.2f}\n"
+            f"ROUGE-L ({level}): {scores['rougeL']:.2f}"
         )

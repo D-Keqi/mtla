@@ -9,7 +9,7 @@ ST_SAVE_DIR=""
 ASR_SAVE_DIR=""
 
 # ======= Option parsing =======
-. ./../tools/parse_options.sh || exit 1;
+. ./../tools/utils/parse_options.sh || exit 1;
 
 # ======= Check required =======
 if [[ -z "$MUSTC_ROOT" || -z "$ST_SAVE_DIR" ]]; then

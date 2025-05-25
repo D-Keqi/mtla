@@ -14,7 +14,7 @@ st_vocab_size=8000
 langpair=en-de
 
 # ======= Parse command-line options =======
-. ./../tools/parse_options.sh || exit 1;
+. ./../tools/utils/parse_options.sh || exit 1;
 
 # ======= Validate inputs =======
 if [[ -z "$MUSTC_ROOT" ]]; then

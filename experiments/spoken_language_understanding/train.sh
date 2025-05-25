@@ -8,7 +8,7 @@ DATA_ROOT=""
 SAVE_DIR=""
 
 # ======= Option parsing =======
-. ./../tools/parse_options.sh || exit 1;
+. ./../tools/utils/parse_options.sh || exit 1;
 
 # ======= Check required =======
 if [[ -z "$DATA_ROOT" || -z "$SAVE_DIR" ]]; then

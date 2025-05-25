@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) 2025 Keqi Deng (University of Cambridge)
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -56,3 +57,27 @@ class WerScorer(BaseScorer):
 
     def score(self):
         return 100.0 * self.distance / self.ref_length if self.ref_length > 0 else 0
+
+
+@register_scorer("ic_accuracy", dataclass=WerScorerConfig)
+class ICScorer(BaseScorer):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.reset()
+
+    def reset(self):
+        self.error = 0
+        self.ref_number = 0
+
+    def add_string(self, ref, pred):
+        hyp_intent = pred.split("\t")[0].split(" ")[0]
+        ref_intent = ref.split("\t")[0].split(" ")[0]
+        if hyp_intent != ref_intent:
+            self.error += 1
+        self.ref_number += 1
+
+    def result_string(self):
+        return f"IC Accuracy: {self.score():.2f}"
+
+    def score(self):
+        return 100 * (1 - (self.error / self.ref_number))

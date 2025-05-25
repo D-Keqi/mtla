@@ -8,7 +8,7 @@ SUM_SAVE_DIR=""
 CHECKPOINT_FILENAME=avg_10_checkpoint.pt
 
 # ======= Option parsing =======
-. ./../tools/parse_options.sh || exit 1;
+. ./../tools/utils/parse_options.sh || exit 1;
 
 # ======= Run inference =======
 fairseq-generate xsum_data/bin \

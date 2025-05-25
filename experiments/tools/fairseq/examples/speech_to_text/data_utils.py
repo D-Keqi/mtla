@@ -179,14 +179,15 @@ def gen_config_yaml(
     if sampling_alpha is not None:
         writer.set_sampling_alpha(sampling_alpha)
 
-    if cmvn_type not in ["global", "utterance"]:
-        raise NotImplementedError
+    #if cmvn_type not in ["global", "utterance"]:
+    #    raise NotImplementedError
 
     if specaugment_policy is not None:
         writer.set_feature_transforms(
             "_train", [f"{cmvn_type}_cmvn", "specaugment"]
         )
-    writer.set_feature_transforms("*", [f"{cmvn_type}_cmvn"])
+    if cmvn_type is not None:
+        writer.set_feature_transforms("*", [f"{cmvn_type}_cmvn"])
 
     if cmvn_type == "global":
         if gcmvn_path is None:
