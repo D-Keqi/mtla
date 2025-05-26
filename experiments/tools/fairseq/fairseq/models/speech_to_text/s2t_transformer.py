@@ -308,7 +308,7 @@ class S2TTransformerModel(FairseqEncoderDecoderModel):
 
             model.frontend = S3prlFrontend(
                 fs=16000,  # By default 16kHz
-                frontend_conf={"upstream": "wavlm_large"},  # 关键参数
+                frontend_conf={"upstream": "wavlm_large"},  # key parameter
                 download_dir="/path/to/wavlm",
                 multilayer_feature=True,
                 layer=-1,  # Use all layers

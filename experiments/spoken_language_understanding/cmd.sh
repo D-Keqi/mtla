@@ -1,0 +1,1 @@
+../tools/cmd.sh
