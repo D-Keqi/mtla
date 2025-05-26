@@ -1,7 +1,7 @@
 # Spoken Language Understanding Example on SLURP
 
 ## Data Preparation
-Download the [SLURP] (https://github.com/pswietojanski/slurp) data and set its path to the value of `SLURP` in `local.data.sh`. 
+Download the [SLURP](https://github.com/pswietojanski/slurp) data and set its path to the value of `SLURP` in `local.data.sh`. 
 Follow the processing steps from [ESPnet](https://github.com/espnet/espnet), then convert the data into TSV manifests.
 ```bash
 bash prepare.sh
