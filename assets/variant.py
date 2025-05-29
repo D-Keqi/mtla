@@ -2,7 +2,7 @@
 """
 Created on Thu May 29 13:08:35 2025
 
-@author: 86135
+@author: Keqi Deng (University of Cambridge)
 """
 
 import math
