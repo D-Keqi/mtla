@@ -254,9 +254,6 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
             if seqlen != T and not self.cross_att:
                 tricky_mask = tricky_mask[-seqlen:]
 
-            print(q_nope_proj.shape)
-            print(kv_norm_t.shape)
-
             if not self.cross_att:
                 scores = (
                     torch.einsum("bshc,btc->bsht", q_nope_proj, kv_norm_t)
