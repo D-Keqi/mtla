@@ -28,7 +28,8 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
         qk_nope_head_dim (int): Dimensionality of non-positional query/key projections.
         qk_rope_head_dim (int): Dimensionality of rotary-positional query/key projections.
         v_head_dim (int): Dimensionality of value projections.
-        down_rate (int): Temporal compression rate of MTLA
+        down_rate (int): Temporal compression rate of MTLA.
+        cross_att (bool): Whether to switch to cross-attention mode.
     """
 
     def __init__(
@@ -270,6 +271,8 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
             if self_attn_mask is not None:
                 scores = scores + self_attn_mask.unsqueeze(0).unsqueeze(2)
             if key_padding_mask is not None:
+                if self.cross_att:
+                    key_padding_mask = key_padding_mask[:, :: self.down_rate]
                 scores = scores.masked_fill(
                     key_padding_mask.unsqueeze(1).unsqueeze(2), float("-inf")
                 )
