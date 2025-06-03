@@ -396,6 +396,35 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
             incremental_state[full_key] = value
         return incremental_state
 
+    def _get_input_buffer(
+        self, incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]]
+    ) -> Dict[str, Optional[Tensor]]:
+        result = self.get_incremental_state(incremental_state, "attn_state")
+        if result is not None:
+            return result
+        else:
+            empty_result: Dict[str, Optional[Tensor]] = {}
+            return empty_result
+
+    def _set_input_buffer(
+        self,
+        incremental_state: Dict[str, Dict[str, Optional[Tensor]]],
+        buffer: Dict[str, Optional[Tensor]],
+    ):
+        return self.set_incremental_state(incremental_state, "attn_state", buffer)
+
+    def reorder_incremental_state(
+        self, incremental_state: Dict[str, Dict[str, Optional[Tensor]]], new_order
+    ):
+        """Reorder buffered internal state (for incremental generation)."""
+        input_buffer = self._get_input_buffer(incremental_state)
+        if input_buffer is not None:
+            for k in input_buffer.keys():
+                if input_buffer[k] is not None:
+                    input_buffer[k] = input_buffer[k].index_select(0, new_order)
+            incremental_state = self._set_input_buffer(incremental_state, input_buffer)
+        return incremental_state
+
 
 class HyperNetwork(nn.Module):
     def __init__(self, d, down_rate, low_rank=4):
