@@ -16,9 +16,10 @@
 - **Positional Encoding**: Rotary Position Embedding ([RoPE](https://arxiv.org/pdf/2104.09864)), and [Decoupled Rotary Position Embedding](https://arxiv.org/pdf/2405.04434)
 
 ### Complete Setup Recipes
-- Tasks: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
-- Data Processing: [Fairseq](https://github.com/facebookresearch/fairseq)-style Fbank feature extraction and compression into `zip` file, and [ESPnet2](https://github.com/espnet/espnet)-style speech data processing with raw audio saved in `flac` or `ark` format
-- Feature Extraction: Fbank online/offline extraction, and self-supervised learning representations as features, using upstream models in [S3PRL](https://github.com/s3prl/s3prl)
+- **Tasks**: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
+- **Data Processing**: [Fairseq](https://github.com/facebookresearch/fairseq)-style Fbank feature extraction and compression into `zip` file, and [ESPnet2](https://github.com/espnet/espnet)-style speech data processing with raw audio saved in `flac` or `ark` format
+- **Feature Extraction**: Fbank online/offline extraction, and self-supervised learning representations as features, using upstream models in [S3PRL](https://github.com/s3prl/s3prl)
+- **Notebook Demo**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/D-Keqi/mtla/blob/main/assets/MTLA.ipynb)
 
 ### Evaluation
 - **Parallel Inference**: Fairseq-style parallel beam search over batches containing multiple data samples
@@ -41,6 +42,8 @@
   y = model(query=x, key=x, value=x, position=pos)
   assert y.shape == x.shape
   ```
+  **A notebook demo of training with MTLA and performing beam search inference refers to**
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/D-Keqi/mtla/blob/main/assets/MTLA.ipynb)
 - If you intend to run the full experiments, please install the project as described below before proceeding to the examples in the `experiments` directory.
   * [PyTorch](http://pytorch.org/) version >= 1.10.0
   * Python version >= 3.8
