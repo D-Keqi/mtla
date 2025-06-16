@@ -27,7 +27,11 @@
 - **Efficiency Evaluation**: inference time spent, and GPU memory (including activation memory and the storage of key-value cache) consumed on inference
 
 ## Installation and Usage
-- If you only need the Python MTLA module, simply clone this repository and refer to the following example:
+- If you only need the Python MTLA module, simply clone this repository or pip install:
+  ``` bash
+  pip install mtla
+  ```
+  Then refer to the following example:
   ``` python
   import torch
   from MTLA import MultiheadTemporalLatentAttention
