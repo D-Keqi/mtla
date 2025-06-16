@@ -30,6 +30,11 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
         v_head_dim (int): Dimensionality of value projections.
         down_rate (int): Temporal compression rate of MTLA.
         cross_att (bool): Whether to switch to cross-attention mode.
+        recompute_prompt_attn (bool): If True, recomputes attention over prompt in decoder
+            self-attention (query=[prompt,x], key/value=[prompt,x]). If False (default), only
+            attends to new tokens (query=x, key/value=[prompt,x]). This depends on the
+            specific design choices of the decoder-only system. For typical autoregressive
+            language models, this is normally set to True.
     """
 
     def __init__(
@@ -45,6 +50,7 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
         v_head_dim=64,
         down_rate=2,
         cross_att=False,
+        recompute_prompt_attn=False,
     ):
         super().__init__()
         self.num_heads = num_heads
@@ -60,6 +66,7 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
         self.qk_head_dim = qk_nope_head_dim + qk_rope_head_dim
         self.v_head_dim = v_head_dim
         self.down_rate = down_rate
+        self.recompute_prompt_attn = recompute_prompt_attn
 
         # Query projection
         if self.q_lora_rank == 0:
@@ -160,6 +167,7 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
                 T, t, kv_norm.device, train=False, T_input=kv_norm
             )  # B, 1, 1
 
+            tricky_mask = None
             if prev_kv_t is not None and prev_k_pe is not None:
                 if T_remain != 1:
                     prev_kv_t[:, -1:] += kv_norm * w_tT  # Update KV cache
@@ -167,26 +175,64 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
                 else:
                     prev_kv_t = torch.cat([prev_kv_t, kv_norm * w_tT], dim=1)  # Concat
                     prev_k_pe = torch.cat([prev_k_pe, k_pe], dim=1)  # Concat
+
+                saved_state["prev_kv_t"] = prev_kv_t
+                saved_state["prev_k_pe"] = prev_k_pe
                 infer_steps = infer_steps + 1
+
             else:
                 # Correspond to the first token inference
                 if key.shape[1] != 1:
-                    zero_mask = self.generate_chunk_mask(T, self.down_rate).to(
-                        k_pe.device
-                    )
                     indices = list(range(self.down_rate - 1, T, self.down_rate))
                     if T - 1 not in indices:
                         indices.append(T - 1)
-                    zero_mask = zero_mask[indices].unsqueeze(0)
-                    prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
-                    prev_k_pe = k_pe[:, indices]
+
+                    # Only the first token generation needs to account for different computation methods of the prefix prompt
+                    if self.recompute_prompt_attn:
+
+                        # When recomputing self-attention for the fixed prompt, "train" is set True
+                        # to match training but KV cache is still compressed
+                        w_tT = self.hypernet_down(
+                            T, t, kv_norm.device, train=True, T_input=kv_norm
+                        )
+                        zero_mask = (
+                            self.generate_chunk_mask(T, self.down_rate)
+                            .to(k_pe.device)
+                            .unsqueeze(0)
+                            .to(kv_norm.dtype)
+                        )
+                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
+                        prev_k_pe = k_pe
+                        saved_state["prev_kv_t"] = prev_kv_t[:, indices]
+                        saved_state["prev_k_pe"] = prev_k_pe[:, indices]
+
+                        tricky_mask = self.generate_stride_aware_causal_mask(T).to(
+                            prev_kv_t.device
+                        )
+                        if seqlen != T:
+                            tricky_mask = tricky_mask[-seqlen:]
+
+                    else:
+                        zero_mask = self.generate_chunk_mask(T, self.down_rate).to(
+                            k_pe.device
+                        )
+                        indices = list(range(self.down_rate - 1, T, self.down_rate))
+                        if T - 1 not in indices:
+                            indices.append(T - 1)
+                        zero_mask = zero_mask[indices].unsqueeze(0)
+                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
+                        prev_k_pe = k_pe[:, indices]
+                        saved_state["prev_kv_t"] = prev_kv_t
+                        saved_state["prev_k_pe"] = prev_k_pe
+
                 else:
                     prev_kv_t = kv_norm * w_tT
                     prev_k_pe = k_pe
+                    saved_state["prev_kv_t"] = prev_kv_t
+                    saved_state["prev_k_pe"] = prev_k_pe
+
                 infer_steps = kv_norm.new_zeros(kv_norm.shape[0]) + T
 
-            saved_state["prev_kv_t"] = prev_kv_t
-            saved_state["prev_k_pe"] = prev_k_pe
             saved_state["infer_steps"] = infer_steps
             incremental_state = self._set_input_buffer(incremental_state, saved_state)
 
@@ -202,6 +248,8 @@ class MultiheadTemporalLatentCrossAttention(nn.Module):
             ) * self.softmax_scale
 
             # Apply masks
+            if tricky_mask is not None:
+                scores = scores + tricky_mask.unsqueeze(0).unsqueeze(2).to(scores.dtype)
             if self_attn_mask is not None:
                 scores = scores + self_attn_mask.unsqueeze(0).unsqueeze(2)
             if key_padding_mask is not None:
