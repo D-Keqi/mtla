@@ -1594,7 +1594,7 @@ class MLADecoderOnlyLayer(MTLADecoderOnlyLayer):
     def __init__(self, args, no_encoder_attn=False):
         args.decoder_down_rate = 1
         super().__init__(args, no_encoder_attn)
-        # 用 MLA 替换 self-attention 模块
+        # Replace self-attention with MLA
         self.p = self.p  # self_attn.dropout_module.p
         self.self_attn = MultiheadLatentAttention(
             embed_dim=self.embed_dim,
