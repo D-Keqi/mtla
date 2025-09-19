@@ -2,9 +2,9 @@
 
 ![MTLA](assets/mtla.png "Multi-head Temporal Latent Attention")
 > **Multi-head Temporal Latent Attention**\
-> Keqi Deng, Philip C. Woodland\
-> Paper: https://arxiv.org/abs/2505.13544
-
+> *Keqi Deng, Philip C. Woodland*  
+> 📄 [Paper on arXiv](https://arxiv.org/abs/2505.13544)  
+> 🎉 **Accepted at NeurIPS 2025!**  
 ## About
 
 **MTLA** is a novel attention mechanism building on [DeepSeek](https://github.com/deepseek-ai/DeepSeek-V3) MLA, with a key innovation: **temporal compression of the key-value cache**. This enables more efficient self-attention and significantly reduces memory footprint during inference, making it particularly valuable for decoder-only architectures such as LLMs. Built on [PyTorch](http://pytorch.org/), this project also serves as an open-source, decoder-only toolkit for end-to-end speech and language processing, covering tasks such as text summarisation, speech translation, speech recognition, spoken language understanding, and so on, with fully featured setup recipes.
