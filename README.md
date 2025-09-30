@@ -107,10 +107,11 @@
 
 If you use this codebase, or otherwise find our work valuable, please cite MTLA:
 ```
-@article{mtla,
+@inproceedings{deng2025mtla,
   title={Multi-head Temporal Latent Attention},
   author={Deng, Keqi and Woodland, Philip C},
-  journal={arXiv preprint arXiv:2505.13544},
+  booktitle={Proc. NeurIPS},
+  address={San Diego, USA},
   year={2025}
 }
 ```
