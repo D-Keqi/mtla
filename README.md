@@ -54,7 +54,7 @@
   cd flash-attention
   python setup.py install
   ```
-  - FlashAttention requires a **CUDA-capable GPU**.  
+  - FlashAttention requires a CUDA-capable GPU with **PyTorch 2.7.0** and **CUDA 12.6** (tested working versions).
   - Only **fp16 (`torch.float16`)** or **bf16 (`torch.bfloat16`)** dtypes are supported.  
   - If FlashAttention is not installed, MTLA will automatically fall back to the standard PyTorch implementation.
   
