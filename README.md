@@ -14,6 +14,7 @@
 ### Supported Attention Mechanisms
 - **Attention**: Multi-head Attention ([MHA](https://arxiv.org/pdf/1706.03762)), Multi-Query Attention ([MQA](https://arxiv.org/pdf/1911.02150)), Grouped-Query Attention ([GQA](https://arxiv.org/pdf/2305.13245)), Multi-head Latent Attention ([MLA](https://arxiv.org/pdf/2405.04434)), and Multi-head Temporal Latent Attention ([MTLA](https://arxiv.org/pdf/2505.13544))
 - **Positional Encoding**: Rotary Position Embedding ([RoPE](https://arxiv.org/pdf/2104.09864)), and [Decoupled Rotary Position Embedding](https://arxiv.org/pdf/2405.04434)
+- **FlashAttention**: [Extended FlashAttention-2](https://github.com/D-Keqi/flash-attention) for MTLA inference
 
 ### Complete Setup Recipes
 - **Tasks**: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
