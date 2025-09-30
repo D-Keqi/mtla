@@ -48,6 +48,52 @@
   ```
   **A notebook demo of training with MTLA and performing beam search inference refers to**
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/D-Keqi/mtla/blob/main/assets/MTLA.ipynb)
+- Optional: **FlashAttention backend** for **MTLA inference**. We provide an optional FlashAttention backend to accelerate MTLA inference. This feature is disabled by default. To enable it, please install our customised FlashAttention fork:
+  ``` bash
+  git clone https://github.com/D-Keqi/flash-attention.git
+  cd flash-attention
+  python setup.py install
+  ```
+  - FlashAttention requires a **CUDA-capable GPU**.  
+  - Only **fp16 (`torch.float16`)** or **bf16 (`torch.bfloat16`)** dtypes are supported.  
+  - If FlashAttention is not installed, MTLA will automatically fall back to the standard PyTorch implementation.
+  
+  Refer to the example below to use our extended FlashAttention for MTLA inference：
+  ```python
+  import torch
+  from MTLA import MultiheadTemporalLatentAttention
+  
+  batch, length, dim = 2, 16, 512
+  dtype = torch.float16  # or torch.bfloat16
+  device = "cuda"
+  
+  x = torch.randn(batch, length, dim, device=device, dtype=dtype)
+  pos = torch.arange(0, length, device=device, dtype=torch.float32).view(1, -1)
+  
+  model = MultiheadTemporalLatentAttention(
+      embed_dim=dim,
+      num_heads=8,
+  ).to(device, dtype=dtype)
+  model.eval()
+  
+  # Incremental inference with FlashAttention-based MTLA
+  incremental_state = {}
+  outputs = []
+  for t in range(length):
+      out = model(
+          query=x[:, t:t+1],
+          key=x[:, t:t+1],
+          value=x[:, t:t+1],
+          position=pos[:, t:t+1],
+          incremental_state=incremental_state,
+          use_flashattn_infer=True,  # Enable FlashAttention
+      )
+      outputs.append(out)
+  
+  y = torch.cat(outputs, dim=1)
+  print("Output shape:", y.shape)  # should be [batch, length, dim]
+  ```
+
 - If you intend to run the full experiments, please install the project as described below before proceeding to the examples in the `experiments` directory.
   * [PyTorch](http://pytorch.org/) version >= 1.10.0
   * Python version >= 3.8
