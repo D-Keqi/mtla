@@ -13,6 +13,13 @@ from torch import Tensor
 from typing import Dict, Optional
 import uuid
 
+try:
+    from flash_attn import flash_attn_with_kvcache_mtla
+except ImportError:
+    print(
+        "Warning: MTLA-extended flash_attn is not installed. FlashAttention-based inference should be disabled."
+    )
+
 
 class MultiheadTemporalLatentAttention(nn.Module):
     """
@@ -97,6 +104,7 @@ class MultiheadTemporalLatentAttention(nn.Module):
         position=None,
         incremental_state=None,
         need_weights=False,
+        use_flashattn_infer=False,
     ):
         """
         Args:
@@ -107,6 +115,7 @@ class MultiheadTemporalLatentAttention(nn.Module):
             self_attn_mask (torch.Tensor): Mask for self-attention of shape (seq_len, seq_len).
             incremental_state (dict): Dictionary for caching key and value during incremental decoding.
             need_weights (bool): Whether to return attention weights.
+            use_flashattn_infer (bool): Whether to use FlashAttention for accelerate inference.
 
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, seq_len, embed_dim).
@@ -147,8 +156,11 @@ class MultiheadTemporalLatentAttention(nn.Module):
         if incremental_state is not None:
 
             saved_state = self._get_input_buffer(incremental_state)
-            prev_kv_t = saved_state.get("prev_kv_t", None)
-            prev_k_pe = saved_state.get("prev_k_pe", None)
+            if use_flashattn_infer:
+                prev_kv_t = saved_state.get("prev_kv_t", None)
+            else:
+                prev_kv_t = saved_state.get("prev_kv_t", None)
+                prev_k_pe = saved_state.get("prev_k_pe", None)
             infer_steps = saved_state.get("infer_steps", None)
 
             T = start_pos + 1
@@ -160,16 +172,29 @@ class MultiheadTemporalLatentAttention(nn.Module):
             )  # B, 1, 1
 
             tricky_mask = None
-            if prev_kv_t is not None and prev_k_pe is not None:
+            if prev_kv_t is not None:
                 if T_remain != 1:
-                    prev_kv_t[:, -1:] += kv_norm * w_tT  # Update KV cache
-                    prev_k_pe[:, -1:] = k_pe  # Update
+                    if use_flashattn_infer:
+                        prev_kv_t[:, -1:, 0, : kv_norm.shape[-1]] += kv_norm * w_tT
+                        prev_kv_t[:, -1:, 0, kv_norm.shape[-1] :] = k_pe
+                    else:
+                        prev_kv_t[:, -1:] += kv_norm * w_tT  # Update KV cache
+                        prev_k_pe[:, -1:] = k_pe  # Update
                 else:
-                    prev_kv_t = torch.cat([prev_kv_t, kv_norm * w_tT], dim=1)  # Concat
-                    prev_k_pe = torch.cat([prev_k_pe, k_pe], dim=1)  # Concat
+                    if use_flashattn_infer:
+                        prev_kv_t = torch.cat(
+                            [
+                                prev_kv_t,
+                                torch.cat([kv_norm * w_tT, k_pe], dim=-1).unsqueeze(-2),
+                            ],
+                            dim=1,
+                        )
+                    else:
+                        prev_kv_t = torch.cat(
+                            [prev_kv_t, kv_norm * w_tT], dim=1
+                        )  # Concat
+                        prev_k_pe = torch.cat([prev_k_pe, k_pe], dim=1)  # Concat
 
-                saved_state["prev_kv_t"] = prev_kv_t
-                saved_state["prev_k_pe"] = prev_k_pe
                 infer_steps = infer_steps + 1
 
             else:
@@ -193,10 +218,12 @@ class MultiheadTemporalLatentAttention(nn.Module):
                             .unsqueeze(0)
                             .to(kv_norm.dtype)
                         )
-                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
-                        prev_k_pe = k_pe
-                        saved_state["prev_kv_t"] = prev_kv_t[:, indices]
-                        saved_state["prev_k_pe"] = prev_k_pe[:, indices]
+                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)[:, indices]
+                        prev_k_pe = k_pe[:, indices]
+                        if use_flashattn_infer:
+                            prev_kv_t = torch.cat(
+                                [prev_kv_t, prev_k_pe], dim=-1
+                            ).unsqueeze(-2)
 
                         tricky_mask = self.generate_stride_aware_causal_mask(T).to(
                             prev_kv_t.device
@@ -214,17 +241,25 @@ class MultiheadTemporalLatentAttention(nn.Module):
                         zero_mask = zero_mask[indices].unsqueeze(0)
                         prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
                         prev_k_pe = k_pe[:, indices]
-                        saved_state["prev_kv_t"] = prev_kv_t
-                        saved_state["prev_k_pe"] = prev_k_pe
+                        if use_flashattn_infer:
+                            prev_kv_t = torch.cat(
+                                [prev_kv_t, prev_k_pe], dim=-1
+                            ).unsqueeze(-2)
 
                 else:
-                    prev_kv_t = kv_norm * w_tT
-                    prev_k_pe = k_pe
-                    saved_state["prev_kv_t"] = prev_kv_t
-                    saved_state["prev_k_pe"] = prev_k_pe
+                    if use_flashattn_infer:
+                        prev_kv_t = torch.cat([kv_norm * w_tT, k_pe], dim=-1).unsqueeze(
+                            -2
+                        )
+                    else:
+                        prev_kv_t = kv_norm * w_tT
+                        prev_k_pe = k_pe
 
                 infer_steps = kv_norm.new_zeros(kv_norm.shape[0]) + T
 
+            saved_state["prev_kv_t"] = prev_kv_t
+            if not use_flashattn_infer:
+                saved_state["prev_k_pe"] = prev_k_pe
             saved_state["infer_steps"] = infer_steps
             incremental_state = self._set_input_buffer(incremental_state, saved_state)
 
@@ -234,29 +269,40 @@ class MultiheadTemporalLatentAttention(nn.Module):
                 "bshd,hdc->bshc", q_nope, wkv_b[:, : self.qk_nope_head_dim]
             )
 
-            scores = (
-                torch.einsum("bshc,btc->bsht", q_nope_proj, prev_kv_t)
-                + torch.einsum("bshr,btr->bsht", q_pe, prev_k_pe)
-            ) * self.softmax_scale
+            if use_flashattn_infer:
+                x = flash_attn_with_kvcache_mtla(
+                    torch.cat([q_nope_proj, q_pe], dim=-1),
+                    prev_kv_t,
+                    kv_norm.shape[-1],
+                    softmax_scale=self.softmax_scale,
+                )
+            else:
+                scores = (
+                    torch.einsum("bshc,btc->bsht", q_nope_proj, prev_kv_t)
+                    + torch.einsum("bshr,btr->bsht", q_pe, prev_k_pe)
+                ) * self.softmax_scale
 
-            # Apply masks
-            if tricky_mask is not None:
-                scores = scores + tricky_mask.unsqueeze(0).unsqueeze(2).to(scores.dtype)
-            if self_attn_mask is not None:
-                scores = scores + self_attn_mask.unsqueeze(0).unsqueeze(2)
-            if key_padding_mask is not None:
-                scores = scores.masked_fill(
-                    key_padding_mask.unsqueeze(1).unsqueeze(2), float("-inf")
+                # Apply masks
+                if tricky_mask is not None:
+                    scores = scores + tricky_mask.unsqueeze(0).unsqueeze(2).to(
+                        scores.dtype
+                    )
+                if self_attn_mask is not None:
+                    scores = scores + self_attn_mask.unsqueeze(0).unsqueeze(2)
+                if key_padding_mask is not None:
+                    scores = scores.masked_fill(
+                        key_padding_mask.unsqueeze(1).unsqueeze(2), float("-inf")
+                    )
+
+                # Compute attention weights
+                attn_weights = F.softmax(scores, dim=-1)
+                attn_weights = F.dropout(
+                    attn_weights, p=self.dropout, training=self.training
                 )
 
-            # Compute attention weights
-            attn_weights = F.softmax(scores, dim=-1)
-            attn_weights = F.dropout(
-                attn_weights, p=self.dropout, training=self.training
-            )
+                # Weighted sum of values
+                x = torch.einsum("bsht,btc->bshc", attn_weights, prev_kv_t)
 
-            # Weighted sum of values
-            x = torch.einsum("bsht,btc->bshc", attn_weights, prev_kv_t)
             x = torch.einsum("bshc,hdc->bshd", x, wkv_b[:, -self.v_head_dim :])
             x = self.wo(x.flatten(2))
 
@@ -505,7 +551,7 @@ class HyperNetwork(nn.Module):
             if t_input is not None:
                 C = t_input
             else:
-                C = self.positional_encoding(1, pos=t - 1).to(device)
+                C = self.positional_encoding(1, pos=t - 1).to(device).to(P.dtype)
 
             C2 = self.fc_c(C)  # (B, 1, d)
             P2 = self.fc_p(P)  # (B, 1, d)
