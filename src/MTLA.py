@@ -153,6 +153,7 @@ class MultiheadTemporalLatentAttention(nn.Module):
         kv_norm = self.kv_norm(kv)  # B, T, d
         k_pe = k_pe.squeeze(2)
 
+        select_save = False
         if incremental_state is not None:
 
             saved_state = self._get_input_buffer(incremental_state)
@@ -218,8 +219,9 @@ class MultiheadTemporalLatentAttention(nn.Module):
                             .unsqueeze(0)
                             .to(kv_norm.dtype)
                         )
-                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)[:, indices]
-                        prev_k_pe = k_pe[:, indices]
+                        prev_kv_t = torch.matmul(w_tT * zero_mask, kv_norm)
+                        prev_k_pe = k_pe
+                        select_save = True
                         if use_flashattn_infer:
                             prev_kv_t = torch.cat(
                                 [prev_kv_t, prev_k_pe], dim=-1
@@ -257,9 +259,13 @@ class MultiheadTemporalLatentAttention(nn.Module):
 
                 infer_steps = kv_norm.new_zeros(kv_norm.shape[0]) + T
 
-            saved_state["prev_kv_t"] = prev_kv_t
+            saved_state["prev_kv_t"] = (
+                prev_kv_t if not select_save else prev_kv_t[:, indices]
+            )
             if not use_flashattn_infer:
-                saved_state["prev_k_pe"] = prev_k_pe
+                saved_state["prev_k_pe"] = (
+                    prev_k_pe if not select_save else prev_k_pe[:, indices]
+                )
             saved_state["infer_steps"] = infer_steps
             incremental_state = self._set_input_buffer(incremental_state, saved_state)
 
