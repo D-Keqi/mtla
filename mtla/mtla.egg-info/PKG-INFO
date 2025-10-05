@@ -1,3 +1,24 @@
+Metadata-Version: 2.1
+Name: mtla
+Version: 0.3.0
+Summary: Multihead Temporal Latent Attention implementation
+Author-email: Keqi Deng <kd502@cam.ac.uk>
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/D-Keqi/mtla
+Project-URL: Repository, https://github.com/D-Keqi/mtla
+Project-URL: BugTracker, https://github.com/D-Keqi/mtla/issues
+Project-URL: Documentation, https://github.com/D-Keqi/mtla#readme
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: NOTICE
+Requires-Dist: torch
+Requires-Dist: transformers
+
 # MTLA: Multi-head Temporal Latent Attention
 
 ![MTLA](assets/mtla.png "Multi-head Temporal Latent Attention")
@@ -36,7 +57,7 @@
   Then refer to the following example:
   ``` python
   import torch
-  from mtla import MultiheadTemporalLatentAttention
+  from MTLA import MultiheadTemporalLatentAttention
   
   batch, length, dim = 2, 64, 512
   x = torch.randn(batch, length, dim)
@@ -63,7 +84,7 @@
   Refer to the example below to use our extended FlashAttention for MTLA inference：
   ```python
   import torch
-  from mtla import MultiheadTemporalLatentAttention
+  from MTLA import MultiheadTemporalLatentAttention
   
   batch, length, dim = 2, 16, 512
   dtype = torch.float16  # or torch.bfloat16
