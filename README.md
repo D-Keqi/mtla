@@ -15,6 +15,7 @@
 - **Attention**: Multi-head Attention ([MHA](https://arxiv.org/pdf/1706.03762)), Multi-Query Attention ([MQA](https://arxiv.org/pdf/1911.02150)), Grouped-Query Attention ([GQA](https://arxiv.org/pdf/2305.13245)), Multi-head Latent Attention ([MLA](https://arxiv.org/pdf/2405.04434)), and Multi-head Temporal Latent Attention ([MTLA](https://arxiv.org/pdf/2505.13544))
 - **Positional Encoding**: Rotary Position Embedding ([RoPE](https://arxiv.org/pdf/2104.09864)), and [Decoupled Rotary Position Embedding](https://arxiv.org/pdf/2405.04434)
 - **FlashAttention**: [Extended FlashAttention-2](https://github.com/D-Keqi/flash-attention) for MTLA inference
+- **HuggingFace Transformers**: Support [HuggingFace Transformers](https://github.com/huggingface/transformers) toolkit usage to train LLMs based on MTLA
 
 ### Complete Setup Recipes
 - **Tasks**: speech translation (MuST-C), speech recognition (AMI), spoken language understanding (SLURP), and text summarisation (XSum)
@@ -94,7 +95,24 @@
   y = torch.cat(outputs, dim=1)
   print("Output shape:", y.shape)  # should be [batch, length, dim]
   ```
+- If you want to use **MTLA** through **HuggingFace Transformers** or train an **LLM** based on MTLA, you just need to `import mtla`, then you can load MTLA-based models as easily as you would load any other model in Transformers. See the example below for reference:
+  ``` python
+  # If you want to build a MTLA-based LLM from scratch
+  from mtla import LlamaMTLAConfig, LlamaMTLAForCausalLM
+  from transformers import AutoModelForCausalLM, AutoTokenizer
+  base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3-8B") # Just an example
+  base_config = base_model.config
+  config = LlamaMTLAConfig(**vars(base_config))
+  config.down_rate = 2 # You can play this and other MTLA-specific parameters
+  model = LlamaMTLAForCausalLM(config)
 
+  # If you want to load a MTLA-based pre-trained LLM
+  import mtla
+  from transformers import AutoModelForCausalLM, AutoTokenizer
+  model = AutoModelForCausalLM.from_pretrained("mtla/model/path")
+  tokenizer = AutoTokenizer.from_pretrained("mtla/model/path")
+  # Then you can use e.g. model.generate() function just like other LLMs
+  ```
 - If you intend to run the full experiments, please install the project as described below before proceeding to the examples in the `experiments` directory.
   * [PyTorch](http://pytorch.org/) version >= 1.10.0
   * Python version >= 3.8
